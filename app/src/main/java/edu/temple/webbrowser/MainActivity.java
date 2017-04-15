@@ -124,6 +124,9 @@ public class MainActivity extends AppCompatActivity {
                 log.info("Prev Pressed.");
                 pager.setCurrentItem(pager.getCurrentItem()-1);
                 textField.setText(url_list.get(pager.getCurrentItem()));
+                currentIndex = pager.getCurrentItem();
+                receiver = fragments.get(currentIndex);
+                receiver.changeURL(url_list.get(pager.getCurrentItem()));
 
 
 /*                i--;
@@ -140,6 +143,9 @@ public class MainActivity extends AppCompatActivity {
                 log.info("Next Pressed.");
                 pager.setCurrentItem(pager.getCurrentItem()+1);
                 textField.setText(url_list.get(pager.getCurrentItem()));
+                currentIndex = pager.getCurrentItem();
+                receiver = fragments.get(currentIndex);
+                receiver.changeURL(url_list.get(pager.getCurrentItem()));
 
                 //textField.setText(url_list.get(pager.getCurrentItem()+1));
 /*                i++;
