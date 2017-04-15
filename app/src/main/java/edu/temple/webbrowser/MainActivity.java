@@ -19,18 +19,18 @@ import java.util.logging.Logger;
 
 public class MainActivity extends AppCompatActivity {
 
-    ArrayList<WebFragment> fragments = new ArrayList<>(); // keep track of frag
-    ArrayList<String> url_list = new ArrayList<>(); //keep track of url
-    int currentIndex = 0;
-    int size = 0;
-    int fragCount = 1;
+    ArrayList<WebFragment> fragments_list = new ArrayList<>(); // to keep track of frag
+    ArrayList<String> url_list = new ArrayList<>(); // to keep track of url
     Logger log = Logger.getAnonymousLogger();
     public EditText editText;
     String url;
-    WebFragment receiver;
     ViewPager viewPager; //for swiping left and right
     PagerAdapter pagerAdapter;
+    WebFragment receiver;
     Button go_button;
+    int currentIndex = 0;
+    int size = 0;
+    int fragCount = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
 
         //assign view pager in layout, for swiping left and right
         viewPager = (ViewPager) findViewById(R.id.view_pager);
-        // 3 pages to load
+        // 3 off screen page seems reasonable
         viewPager.setOffscreenPageLimit(3);
         viewPager.setAdapter(new CustomPagerAdapter(getSupportFragmentManager()));
 
@@ -49,10 +49,27 @@ public class MainActivity extends AppCompatActivity {
         go_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                goButtonCLicked(); //this function will be called when the user clicked on GO button
+                //this function will be called when "Go" button is clicked
+                log.info("Go button clicked");
+                //Save the state
+                currentIndex = viewPager.getCurrentItem();
+                receiver = fragments_list.get(currentIndex);
+                url = editText.getText().toString();
+                //if we are on fragment number 1, add url to the first array list
+                if (url_list.size() == 0) {
+                    url_list.add(url);
+                }
+                // overwrite existing url
+                if (url_list.size() > viewPager.getCurrentItem()) {
+                    url_list.set(viewPager.getCurrentItem(), url);
+                    log.info("existing overwritten");
+                }
+                //Call fragment to load url
+                receiver.openURL(url);
+                log.info(url_list.toString());
             }
         });
-        //Service other applications that call this app
+        //to respond to implicit intent from other applications
         Uri data = getIntent().getData();
         if(data != null) {
             String url = data.toString();
@@ -75,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
                 viewPager.setCurrentItem(viewPager.getCurrentItem()-1);
                 editText.setText(url_list.get(viewPager.getCurrentItem()));
                 currentIndex = viewPager.getCurrentItem();
-                receiver = fragments.get(currentIndex);
+                receiver = fragments_list.get(currentIndex);
                 receiver.openURL(url_list.get(viewPager.getCurrentItem())); //open url when we navigate back and forth
                 return true;
 
@@ -85,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
                 viewPager.setCurrentItem(viewPager.getCurrentItem()+1);
                 editText.setText(url_list.get(viewPager.getCurrentItem()));
                 currentIndex = viewPager.getCurrentItem();
-                receiver = fragments.get(currentIndex);
+                receiver = fragments_list.get(currentIndex);
                 receiver.openURL(url_list.get(viewPager.getCurrentItem())); //open url when we navigate back and forth
                 return true;
 
@@ -94,46 +111,24 @@ public class MainActivity extends AppCompatActivity {
                 log.info("New button clicked");
                 //create new webfrag and add it to fragment arraylist
                 WebFragment webFragment = new WebFragment();
-                fragments.add(size, webFragment);
+                fragments_list.add(size, webFragment);
                 fragCount++;
-                //link to adapter and notify of the change
+                //link to adapter
                 pagerAdapter = viewPager.getAdapter();
                 pagerAdapter.notifyDataSetChanged();
                 receiver = webFragment;
                 viewPager.setCurrentItem(size);
-                editText.setText("");
+                editText.setText("");// set tthe text field to empty everytime we start a new web fragment
                 // add empty string to url array list when new button is clicked to reserve a space
                 url_list.add(viewPager.getCurrentItem(), "");
-                //i++;
                 return true;
 
             default:
-                // If we got here, the user's action was not recognized.
-                // Invoke the superclass to handle it.
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    public void goButtonCLicked(){
-        //this function will be called when "Go" button is clicked
-        log.info("Go button clicked");
-        //Save current state
-        currentIndex = viewPager.getCurrentItem();
-        receiver = fragments.get(currentIndex);
-        url = editText.getText().toString();
-        //
-        if (url_list.size() == 0) {
-            url_list.add(url);
-        }
-        if (url_list.size() > viewPager.getCurrentItem()) {
-            url_list.set(viewPager.getCurrentItem(), url);
-            System.out.println("existing overwritten");
-        }
-        //Call fragment to load url
-        receiver.openURL(url);
-        System.out.println(url_list.toString());
-    }
-
+    //customPagerAdapter class
     private class CustomPagerAdapter extends FragmentPagerAdapter {
 
         public CustomPagerAdapter(FragmentManager fragmentManager) {
@@ -146,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
 
                 default:
                     WebFragment fragment = new WebFragment();
-                    fragments.add(size, fragment);
+                    fragments_list.add(size, fragment);
                     size++;
                     return fragment;
             }
