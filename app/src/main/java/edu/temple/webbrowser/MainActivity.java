@@ -163,9 +163,8 @@ public class MainActivity extends AppCompatActivity {
                 receiver = fragment;
                 pager.setCurrentItem(sizeIndex);
                 textField.setText("");
-                //Once the new button is pressed, call onPrepareOptionsMenu() to change to go icon
-                //invalidateOptionsMenu();
                 addressBarLoaded = true;
+                url_list.add(pager.getCurrentItem(), "");
                 //i++;
                 return true;
 
@@ -187,12 +186,10 @@ public class MainActivity extends AppCompatActivity {
         input = textField.getText().toString();
         if (url_list.size() == 0) {
             url_list.add(input);
-        } else if (url_list.size() > pager.getCurrentItem()) {
+        }
+        if (url_list.size() > pager.getCurrentItem()) {
             url_list.set(pager.getCurrentItem(), input);
             System.out.println("existing overwritten");
-        } else {
-            url_list.add(pager.getCurrentItem(), input);
-            System.out.println("new added");
         }
         //Call fragment to load url
         receiver.changeURL(input);
