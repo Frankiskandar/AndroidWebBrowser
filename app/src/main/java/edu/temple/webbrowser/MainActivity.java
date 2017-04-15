@@ -1,5 +1,6 @@
 package edu.temple.webbrowser;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -18,95 +19,44 @@ import java.util.logging.Logger;
 
 public class MainActivity extends AppCompatActivity {
 
-    ArrayList<WebFragment> fragments = new ArrayList<>();
-    ArrayList<String> url_list = new ArrayList<>();
+    ArrayList<WebFragment> fragments = new ArrayList<>(); // keep track of frag
+    ArrayList<String> url_list = new ArrayList<>(); //keep track of url
     int currentIndex = 0;
-    int sizeIndex = 0;
-    int fragNum = 1;
+    int size = 0;
+    int fragCount = 1;
     Logger log = Logger.getAnonymousLogger();
-    public EditText textField;
-    String input;
+    public EditText editText;
+    String url;
     WebFragment receiver;
-    ViewPager pager;
-    PagerAdapter pa;
-    Button go;
-    boolean addressBarLoaded = true;
-    int i= 0;
+    ViewPager viewPager; //for swiping left and right
+    PagerAdapter pagerAdapter;
+    Button go_button;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //Set up view pager
-        pager = (ViewPager) findViewById(R.id.view_pager);
-        pager.setOffscreenPageLimit(3); // the number of "off screen" pages to keep loaded each side of the current page
-        pager.setAdapter(new CustomPagerAdapter(getSupportFragmentManager()));
+        //assign view pager in layout, for swiping left and right
+        viewPager = (ViewPager) findViewById(R.id.view_pager);
+        // 3 pages to load
+        viewPager.setOffscreenPageLimit(3);
+        viewPager.setAdapter(new CustomPagerAdapter(getSupportFragmentManager()));
 
-        textField = (EditText) findViewById(R.id.url_text);
+        editText = (EditText) findViewById(R.id.url_text);
+        go_button = (Button) findViewById(R.id.go_button);
 
-        //Implement soft keyboard listener for when the user presses enter key rather than use the go icon
-//        textField.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-//            @Override
-//            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-//                log.info("onEditorAction called");
-//                if(actionId == EditorInfo.IME_ACTION_GO || (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)){
-//                    log.info("Enter key pressed");
-//                    go();
-//                }
-//                return false;
-//            }
-//        });
-
-        go = (Button) findViewById(R.id.go_button);
-
-        go.setOnClickListener(new View.OnClickListener() {
+        go_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                go();
+                goButtonCLicked(); //this function will be called when the user clicked on GO button
             }
         });
-
-
-
-
-        //Disable title
-/*        ActionBar ab = getSupportActionBar();
-        ab.setDisplayShowTitleEnabled(false);*/
-
         //Service other applications that call this app
-/*        Uri data = getIntent().getData();
+        Uri data = getIntent().getData();
         if(data != null) {
             String url = data.toString();
-            //textField.setText(url);
-            receiver.changeURL(url);
-        }*/
-    }
-
-
-
-
-    private class CustomPagerAdapter extends FragmentPagerAdapter {
-
-        public CustomPagerAdapter(FragmentManager fm) {
-            super(fm);
-        }
-
-        @Override
-        public Fragment getItem(int pos) {
-            switch(pos) {
-
-                default:
-                    WebFragment frag = new WebFragment();
-                    fragments.add(sizeIndex, frag);
-                    sizeIndex++;
-                    return frag;
-            }
-        }
-
-        @Override
-        public int getCount() {
-            return fragNum;
+            receiver.openURL(url);
         }
     }
 
@@ -120,57 +70,40 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
             case R.id.prev_button:
-                //User chose the "previous" action
-                log.info("Prev Pressed.");
-                pager.setCurrentItem(pager.getCurrentItem()-1);
-                textField.setText(url_list.get(pager.getCurrentItem()));
-                currentIndex = pager.getCurrentItem();
+                //if prev arrow button is clicked
+                log.info("Previous button clicked");
+                viewPager.setCurrentItem(viewPager.getCurrentItem()-1);
+                editText.setText(url_list.get(viewPager.getCurrentItem()));
+                currentIndex = viewPager.getCurrentItem();
                 receiver = fragments.get(currentIndex);
-                receiver.changeURL(url_list.get(pager.getCurrentItem()));
-
-
-/*                i--;
-                if (url_list.get(i)==null){
-                    textField.setText("");
-                } else
-                    textField.setText(url_list.get(i-1));*/
-
-
+                receiver.openURL(url_list.get(viewPager.getCurrentItem())); //open url when we navigate back and forth
                 return true;
 
             case R.id.next_button:
-                //User chose the "next" action
-                log.info("Next Pressed.");
-                pager.setCurrentItem(pager.getCurrentItem()+1);
-                textField.setText(url_list.get(pager.getCurrentItem()));
-                currentIndex = pager.getCurrentItem();
+                //if next arrow button clicked
+                log.info("Next button clicked");
+                viewPager.setCurrentItem(viewPager.getCurrentItem()+1);
+                editText.setText(url_list.get(viewPager.getCurrentItem()));
+                currentIndex = viewPager.getCurrentItem();
                 receiver = fragments.get(currentIndex);
-                receiver.changeURL(url_list.get(pager.getCurrentItem()));
-
-                //textField.setText(url_list.get(pager.getCurrentItem()+1));
-/*                i++;
-                if (url_list.get(i)==null){
-                    textField.setText("");
-                } else
-                    textField.setText(url_list.get(i+1));
-                    */
+                receiver.openURL(url_list.get(viewPager.getCurrentItem())); //open url when we navigate back and forth
                 return true;
 
             case R.id.new_button:
-                //User chose the "new" action to get a new window
-                log.info("New Pressed.");
-                //Create new fragment and add web frag to array
-                WebFragment fragment = new WebFragment();
-                fragments.add(sizeIndex, fragment);
-                fragNum++;
+                //if NEW/PLUS button is clicked
+                log.info("New button clicked");
+                //create new webfrag and add it to fragment arraylist
+                WebFragment webFragment = new WebFragment();
+                fragments.add(size, webFragment);
+                fragCount++;
                 //link to adapter and notify of the change
-                pa = pager.getAdapter();
-                pa.notifyDataSetChanged();
-                receiver = fragment;
-                pager.setCurrentItem(sizeIndex);
-                textField.setText("");
-                addressBarLoaded = true;
-                url_list.add(pager.getCurrentItem(), "");
+                pagerAdapter = viewPager.getAdapter();
+                pagerAdapter.notifyDataSetChanged();
+                receiver = webFragment;
+                viewPager.setCurrentItem(size);
+                editText.setText("");
+                // add empty string to url array list when new button is clicked to reserve a space
+                url_list.add(viewPager.getCurrentItem(), "");
                 //i++;
                 return true;
 
@@ -181,26 +114,47 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void go(){
-        //User pressed the "go" button to go to the page
-        log.info("Go Pressed.");
-        //Once the go button is pressed, call onPrepareOptionsMenu() to change to refresh icon
-        invalidateOptionsMenu();
+    public void goButtonCLicked(){
+        //this function will be called when "Go" button is clicked
+        log.info("Go button clicked");
         //Save current state
-        currentIndex = pager.getCurrentItem();
+        currentIndex = viewPager.getCurrentItem();
         receiver = fragments.get(currentIndex);
-        input = textField.getText().toString();
+        url = editText.getText().toString();
+        //
         if (url_list.size() == 0) {
-            url_list.add(input);
+            url_list.add(url);
         }
-        if (url_list.size() > pager.getCurrentItem()) {
-            url_list.set(pager.getCurrentItem(), input);
+        if (url_list.size() > viewPager.getCurrentItem()) {
+            url_list.set(viewPager.getCurrentItem(), url);
             System.out.println("existing overwritten");
         }
         //Call fragment to load url
-        receiver.changeURL(input);
-        addressBarLoaded = false;
-        //i++;
+        receiver.openURL(url);
         System.out.println(url_list.toString());
+    }
+
+    private class CustomPagerAdapter extends FragmentPagerAdapter {
+
+        public CustomPagerAdapter(FragmentManager fragmentManager) {
+            super(fragmentManager);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            switch(position) {
+
+                default:
+                    WebFragment fragment = new WebFragment();
+                    fragments.add(size, fragment);
+                    size++;
+                    return fragment;
+            }
+        }
+
+        @Override
+        public int getCount() {
+            return fragCount;
+        }
     }
 }
